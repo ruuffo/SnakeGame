@@ -2,7 +2,6 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from objects.gameboard import GameBoard
-from objects.snake import Snake
 
 HEIGHT = 48
 WIDTH = 75
@@ -12,7 +11,7 @@ class SnakeGame(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.board = GameBoard(self, width=WIDTH, height=HEIGHT)
+        self.board = GameBoard(width=WIDTH, height=HEIGHT)
         self.setCentralWidget(self.board)
         self.setWindowTitle('Snake Game')
         self.resize(WIDTH * 10, HEIGHT * 10)
