@@ -1,6 +1,6 @@
 import random
 
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QMainWindow, QWidget
 
@@ -14,6 +14,7 @@ nb_lapins = 10
 
 
 class GameBoard(QMainWindow):
+
     def __init__(self):
         super().__init__()
         self.snake = Snake()
@@ -50,10 +51,12 @@ class GameBoard(QMainWindow):
     def check_collision(self):
         head = self.snake.body[0]
         x_head, y_head = head[0], head[1]
+
         if not (0 <= x_head < width()
-                or 0 <= y_head < height()) or head in self.snake.body[1:]:
+                and 0 <= y_head < height()) or (head in self.snake.body[1:]):
             self.timer.stop()
-            print("stop")
+            self.close()
+            print("Collision")
 
     def check_eat(self):
         head = self.snake.body[0]

@@ -1,4 +1,5 @@
 import sys
+
 from PyQt5.QtWidgets import QApplication
 
 from objects.gameboard import GameBoard
@@ -8,6 +9,16 @@ WIDTH = 75
 
 
 def heuristic(node, goal):
+    """Calcul théoriquement le chemin le plus court entre deux noeuds. ici, il
+    s'agit de la distance de manhattan
+
+    Args:
+        node (Node): noeud de départ
+        goal (Node): noeud d'arrivée
+
+    Returns:
+        int: distance de manhattan
+    """
     return abs(node.x - goal.x) + abs(node.y - goal.y)
 
 
