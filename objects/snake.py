@@ -29,4 +29,4 @@ class Snake:
         self.body = [new_head] + self.body[:-1]
 
     def grow(self):
-        self.body = self.body + self.body[-1]
+        self.body = self.body + [self.body[-1]]

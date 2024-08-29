@@ -4,6 +4,7 @@ from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QMainWindow, QWidget
 
+from objects import rabbit
 from objects.grid import Grid
 from objects.rabbit import Rabbit
 from objects.snake import Snake
@@ -42,6 +43,7 @@ class GameBoard(QMainWindow):
     def timerEvent(self):
         self.snake.move()
         self.check_collision()
+        self.check_eat()
         self.grid.update(snake=self.snake, rabbits=self.rabbits)
         self.update()
 
@@ -52,3 +54,11 @@ class GameBoard(QMainWindow):
                 or 0 <= y_head < height()) or head in self.snake.body[1:]:
             self.timer.stop()
             print("stop")
+
+    def check_eat(self):
+        head = self.snake.body[0]
+        x_head, y_head = head[0], head[1]
+        for rabbit in self.rabbits:
+            if rabbit.x == x_head and rabbit.y == y_head:
+                self.rabbits.remove(rabbit)
+                self.snake.grow()
