@@ -3,12 +3,11 @@ from PyQt5.QtCore import Qt
 
 class Snake:
     GRID_CODE = 2
+
     def __init__(self,
                  direction=Qt.Key_Down,
                  body=[(10, 10), (11, 10), (12, 10), (13, 10), (14, 10)]):
         self.direction = direction
-        self.segments = []
-        self.positions_queue = [segment.pos() for segment in self.segments]
         self.body = body
 
     def change_direction(self, direction):

@@ -1,21 +1,10 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication
 
 from objects.gameboard import GameBoard
 
 HEIGHT = 48
 WIDTH = 75
-
-
-class SnakeGame(QMainWindow):
-
-    def __init__(self):
-        super().__init__()
-        self.board = GameBoard(width=WIDTH, height=HEIGHT)
-        self.setCentralWidget(self.board)
-        self.setWindowTitle('Snake Game')
-        self.resize(WIDTH * 10, HEIGHT * 10)
-        self.show()
 
 
 def heuristic(node, goal):
@@ -117,5 +106,5 @@ def jps(grid, start, end):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    snake_game = SnakeGame()
+    snake_game = GameBoard()
     sys.exit(app.exec_())
