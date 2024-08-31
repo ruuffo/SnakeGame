@@ -7,7 +7,7 @@ class Snake:
     def __init__(
         self,
         direction=Qt.Key_Down,
-        body=[(10, 10), (11, 10), (12, 10), (13, 10), (14, 10)],
+        body=[(10, 10), (11, 10), (12, 10)],
     ):
         self.direction = direction
         self.body = body
@@ -37,3 +37,6 @@ class Snake:
 
     def grow(self):
         self.body = self.body + [self.body[-1]]
+
+    def get_head(self):
+        return self.body[0]

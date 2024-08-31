@@ -14,7 +14,11 @@ class Grid:
         self.nodes = [[Node(x, y) for y in range(height())]
                       for x in range(width())]
 
-    def get_node(self, x, y):
+    def get_node(self, *args) -> Node:
+        if len(args) == 2:
+            x, y = args
+        elif len(args) == 1 and isinstance(args[0], tuple):
+            x, y = args[0]
         if 0 <= x < width() and 0 <= y < height():
             return self.nodes[x][y]
         else:
@@ -48,11 +52,12 @@ class Grid:
         for x in range(len(self.nodes)):
             for y in range(len(self.nodes[0])):
                 self.nodes[x][y].kind = empty_cell_grid_code()
+                self.nodes[x][y].walkable = True
+
         for bodypart in snake.body:
             x, y = bodypart[0], bodypart[1]
             if self.get_node(x, y) is not None:
                 self.nodes[x][y].kind = Snake.GRID_CODE
-
                 self.nodes[x][y].walkable = False
 
         for rabbit in rabbits:

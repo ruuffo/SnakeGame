@@ -22,3 +22,9 @@ class Node:
 
     def __lt__(self, other):
         return self.f < other.f
+
+    def __repr__(self) -> str:
+        return self.pos()
+
+    def pos(self) -> tuple:
+        return self.x, self.y

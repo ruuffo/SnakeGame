@@ -1,3 +1,4 @@
+from contextlib import nullcontext
 import random
 
 from PyQt5.QtCore import QTimer
@@ -9,10 +10,10 @@ from src.objects.grid import Grid
 from src.objects.rabbit import Rabbit
 from src.objects.snake import Snake
 from src.utils.astar import shortest_path
-from src.utils.constants import height, width
-from src.utils.utils import compute_direction
+from src.utils.constants import height, width, nb_lapins
+from src.utils.utils import choose_direction
 
-nb_lapins = 10
+nb_lapins = nb_lapins()
 
 
 class GameBoard(QMainWindow):
@@ -25,13 +26,15 @@ class GameBoard(QMainWindow):
             for _ in range(nb_lapins)
         ]
         self.grid = Grid()
-        self.movements = []
+        self.directions = []
         self.setWindowTitle("Jeu Snake")
         self.setGeometry(0, 0, width() * 10, height() * 10)
         self.setFocus()
+        self.grid.update(snake=self.snake, rabbits=self.rabbits)
+
         self.timer = QTimer()
         self.timer.timeout.connect(self.timerEvent)
-        self.timer.start(100)
+        self.timer.start(150)
 
         self.show()
 
@@ -44,30 +47,34 @@ class GameBoard(QMainWindow):
         self.grid.draw(painter)
 
     def timerEvent(self):
-        snake_head = self.snake.body[0]
-        snake_head_node = self.grid.get_node(snake_head[0], snake_head[1])
-        if not self.movements:
 
-            random_rabbit = random.choice(self.rabbits)
-            # self.rabbits.remove(random_rabbit)
-            rabbit_node = self.grid.get_node(random_rabbit.x, random_rabbit.y)
-            self.movements = shortest_path(self.grid,
-                                           start=snake_head_node,
-                                           end=rabbit_node)
-        next_node = self.movements.pop(0)
-        new_direction = compute_direction(next_node=next_node,
-                                          current_node=snake_head_node)
-        self.snake.change_direction(new_direction)
+        snake_head = self.snake.get_head()
+        snake_head_node = self.grid.get_node(snake_head[0], snake_head[1])
+        if not self.directions:
+            self.define_new_directions(snake_head_node)
+        if self.directions:
+            new_direction = self.directions.pop(0)
+            self.snake.change_direction(new_direction)
         self.snake.move()
         self.check_collision()
         self.check_eat()
         self.grid.update(snake=self.snake, rabbits=self.rabbits)
         self.update()
 
-    def check_collision(self):
-        head = self.snake.body[0]
-        x_head, y_head = head[0], head[1]
+    def define_new_directions(self, snake_head_node):
+        next_rabbit = self.closest_rabbit()
+        rabbit_node = self.grid.get_node(next_rabbit.pos())
+        next_nodes = shortest_path(self.grid,
+                                   start=snake_head_node,
+                                   end=rabbit_node)
+        self.directions = [
+            choose_direction(n1=next_nodes[i], n2=next_nodes[i + 1])
+            for i in range(len(next_nodes) - 1) if next_nodes is not None
+        ]
 
+    def check_collision(self):
+        head = self.snake.get_head()
+        x_head, y_head = head[0], head[1]
         if not (0 <= x_head < width()
                 and 0 <= y_head < height()) or (head in self.snake.body[1:]):
             self.timer.stop()
@@ -75,11 +82,18 @@ class GameBoard(QMainWindow):
             print("Collision")
 
     def check_eat(self):
-        head = self.snake.body[0]
+        head = self.snake.get_head()
         x_head, y_head = head[0], head[1]
         for rabbit_ in self.rabbits:
             if rabbit_.x == x_head and rabbit_.y == y_head:
-                pass
+
                 self.rabbits.remove(rabbit_)
                 self.snake.grow()
-                break
+
+    def closest_rabbit(self):
+        head = self.snake.get_head()
+        head_node = self.grid.get_node(head)
+        next_rabbit = min(self.rabbits,
+                          key=lambda p: (p.x - head_node.x)**2 +
+                          (p.y - head_node.y)**2)
+        return next_rabbit

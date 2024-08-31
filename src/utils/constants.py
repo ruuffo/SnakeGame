@@ -3,8 +3,12 @@ def empty_cell_grid_code():
 
 
 def width():
-    return 75
+    return 30
 
 
 def height():
-    return 48
+    return 30
+
+
+def nb_lapins():
+    return 100
