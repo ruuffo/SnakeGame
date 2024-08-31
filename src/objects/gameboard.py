@@ -67,9 +67,15 @@ class GameBoard(QMainWindow):
         next_nodes = shortest_path(self.grid,
                                    start=snake_head_node,
                                    end=rabbit_node)
+
+        if not next_nodes:
+            self.timer.stop()
+            self.close()
+            print("Loose !")
+            return
         self.directions = [
             choose_direction(n1=next_nodes[i], n2=next_nodes[i + 1])
-            for i in range(len(next_nodes) - 1) if next_nodes is not None
+            for i in range(len(next_nodes) - 1)
         ]
 
     def check_collision(self):
