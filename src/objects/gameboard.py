@@ -1,11 +1,9 @@
-from contextlib import nullcontext
 import random
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QMainWindow
 
-from src.objects import rabbit
 from src.objects.grid import Grid
 from src.objects.rabbit import Rabbit
 from src.objects.snake import Snake
@@ -62,6 +60,8 @@ class GameBoard(QMainWindow):
         self.update()
 
     def define_new_directions(self, snake_head_node):
+        if not self.rabbits:
+            self.win()
         next_rabbit = self.closest_rabbit()
         rabbit_node = self.grid.get_node(next_rabbit.pos())
         next_nodes = shortest_path(self.grid,
@@ -83,8 +83,7 @@ class GameBoard(QMainWindow):
         x_head, y_head = head[0], head[1]
         if not (0 <= x_head < width()
                 and 0 <= y_head < height()) or (head in self.snake.body[1:]):
-            self.timer.stop()
-            self.close()
+            self.stop()
             print("Collision")
 
     def check_eat(self):
@@ -103,3 +102,15 @@ class GameBoard(QMainWindow):
                           key=lambda p: (p.x - head_node.x)**2 +
                           (p.y - head_node.y)**2)
         return next_rabbit
+
+    def win(self):
+        self.stop()
+        print("Win !")
+
+    def stop(self):
+        self.timer.stop()
+        self.close()
+
+    def loose(self):
+        self.stop()
+        print("Loose !")
