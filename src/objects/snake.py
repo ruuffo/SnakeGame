@@ -4,9 +4,11 @@ from PyQt5.QtCore import Qt
 class Snake:
     GRID_CODE = 2
 
-    def __init__(self,
-                 direction=Qt.Key_Down,
-                 body=[(10, 10), (11, 10), (12, 10), (13, 10), (14, 10)]):
+    def __init__(
+        self,
+        direction=Qt.Key_Down,
+        body=[(10, 10), (11, 10), (12, 10), (13, 10), (14, 10)],
+    ):
         self.direction = direction
         self.body = body
 
