@@ -1,5 +1,5 @@
-
 from PyQt5.QtCore import QObject, pyqtSignal
+from src.objects.performancetracker import PerformanceTracker
 from src.utils.astar import shortest_path
 from src.utils.constants import height, width
 from src.utils.utils import choose_direction
@@ -14,11 +14,15 @@ class GameEngine(QObject):
         self.snake = snake
         self.rabbits = rabbits
         self.grid = grid
+        self.compute_counter = 0
         self.directions = []
+        self.performance_tracker = PerformanceTracker()
 
     def update(self):
-        if not self.directions:
+        self.compute_counter += 1
+        if not self.directions or self.compute_counter == 5:
             self.define_new_directions()
+            self.compute_counter = 0
         self.move_snake()
         self.check_collision()
         self.check_eat()
@@ -43,9 +47,7 @@ class GameEngine(QObject):
         next_rabbit = self.closest_rabbit()
         rabbit_node = self.grid.get_node(next_rabbit.pos())
 
-        next_nodes = shortest_path(self.grid,
-                                   start=head_node,
-                                   end=rabbit_node)
+        next_nodes = shortest_path(self.grid, start=head_node, end=rabbit_node)
 
         if not next_nodes:
             return
@@ -60,7 +62,7 @@ class GameEngine(QObject):
         x_head, y_head = head[0], head[1]
         for rabbit_ in self.rabbits:
             if rabbit_.x == x_head and rabbit_.y == y_head:
-
+                self.performance_tracker.increment_lapins_manges()
                 self.rabbits.remove(rabbit_)
                 self.snake.grow()
 
@@ -69,6 +71,7 @@ class GameEngine(QObject):
             new_direction = self.directions.pop(0)
             self.snake.change_direction(new_direction)
         self.snake.move()
+        self.performance_tracker.increment_movements()
 
     def closest_rabbit(self):
         head = self.snake.get_head()
@@ -80,7 +83,9 @@ class GameEngine(QObject):
         return next_rabbit
 
     def win(self):
+        self.performance_tracker.save_performance()
         self.game_won.emit()
 
     def loose(self):
+        self.performance_tracker.save_performance()
         self.game_lost.emit()

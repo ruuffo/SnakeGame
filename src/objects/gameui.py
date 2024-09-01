@@ -3,7 +3,6 @@ from PyQt5.QtWidgets import QMainWindow
 
 from src.utils.constants import height, width, nb_lapins
 
-
 nb_lapins = nb_lapins()
 
 
