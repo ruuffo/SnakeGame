@@ -32,7 +32,6 @@ class GameEngine(QObject):
             self.loose()
             print("Collision")
 
-
     def define_new_directions(self):
         if not self.rabbits:
             self.win()
@@ -49,7 +48,6 @@ class GameEngine(QObject):
                                    end=rabbit_node)
 
         if not next_nodes:
-            self.loose()
             return
 
         self.directions = [

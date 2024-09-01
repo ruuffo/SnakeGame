@@ -16,16 +16,17 @@ class GameBoard(QWidget):
     def __init__(self, ) -> None:
         super().__init__()
         self.snake = Snake()
+
         self.rabbits = [
             Rabbit(random.randrange(width()), random.randrange(height()))
             for _ in range(nb_lapins())
         ]
-        self.grid = Grid()
-        self.engine = GameEngine(self.snake, self.rabbits, self.grid)
 
+        self.grid = Grid()
+
+        self.engine = GameEngine(self.snake, self.rabbits, self.grid)
         self.engine.game_won.connect(self.on_game_won)
         self.engine.game_lost.connect(self.on_game_lost)
-
 
         self.ui = GameUI(self.grid)
 
