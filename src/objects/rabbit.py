@@ -10,3 +10,9 @@ class Rabbit:
 
     def pos(self):
         return self.x, self.y
+
+    def __eq__(self, value: object) -> bool:
+        return self.x == value.x and self.y == value.y
+
+    def __hash__(self):
+        return hash((self.x, self.y))

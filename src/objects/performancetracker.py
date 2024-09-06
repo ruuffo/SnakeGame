@@ -29,7 +29,7 @@ class PerformanceTracker:
             "duration": duration,
             "lapins_manges": self.lapins_manges,
             "movements": self.movements,
-            "score": self.score
+            "score": self.score,
         }
 
     def save_performance(self, filename="performances.csv"):
@@ -41,7 +41,7 @@ class PerformanceTracker:
         # Vérifiez si le fichier existe
         file_exists = os.path.isfile(filename)
 
-        with open(filename, mode='a', newline='') as file:
+        with open(filename, mode="a", newline="") as file:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
 
             # Écrire l'en-tête uniquement si le fichier n'existe pas encore
@@ -52,3 +52,6 @@ class PerformanceTracker:
             writer.writerow(performance_data)
 
         print("Performance enregistrée dans le fichier CSV.")
+
+    def reset(self):
+        self.__init__()

@@ -1,28 +1,43 @@
-from PyQt5.QtCore import QObject, pyqtSignal
+import random
+import numpy as np
+from typing import List
+from PyQt5.QtCore import QObject, Qt, pyqtSignal
+from src.objects.pathfindingalgorithm import PathfindingAlgorithm
+from src.objects.traininghandler import TrainingHandler
+from src.objects.grid import Grid
+from src.objects.rabbit import Rabbit
+from src.objects.snake import Snake
 from src.objects.performancetracker import PerformanceTracker
-from src.utils.astar import shortest_path
-from src.utils.constants import height, width
-from src.utils.utils import choose_direction
+from src.utils.constants import height, nb_lapins, width
+from src.utils.utils import create_rabbits
+
+ACTION_MAP = {0: Qt.Key_Up, 1: Qt.Key_Down, 2: Qt.Key_Left, 3: Qt.Key_Right}
+REVERSE_ACTION_MAP = {v: k for k, v in ACTION_MAP.items()}
 
 
 class GameEngine(QObject):
     game_won = pyqtSignal()
     game_lost = pyqtSignal()
+    game_stop = pyqtSignal()
 
-    def __init__(self, snake, rabbits, grid):
+    def __init__(self, snake: Snake, rabbits: List[Rabbit], grid: Grid,
+                 algorithm: PathfindingAlgorithm):
         super().__init__()
         self.snake = snake
         self.rabbits = rabbits
         self.grid = grid
-        self.compute_counter = 0
         self.directions = []
         self.performance_tracker = PerformanceTracker()
+        self.training_handler = TrainingHandler()
+        self.algorithm = algorithm
 
     def update(self):
-        self.compute_counter += 1
-        if not self.directions or self.compute_counter == 5:
-            self.define_new_directions()
-            self.compute_counter = 0
+        if not self.directions:
+            if not self.rabbits:
+                self.win()
+            else:
+                self.directions = self.algorithm.define_new_directions(
+                    rabbits=self.rabbits, snake=self.snake, grid=self.grid)
         self.move_snake()
         self.check_collision()
         self.check_eat()
@@ -34,28 +49,11 @@ class GameEngine(QObject):
         if not (0 <= x_head < width()
                 and 0 <= y_head < height()) or (head in self.snake.body[1:]):
             self.loose()
-            print("Collision")
 
     def define_new_directions(self):
-        if not self.rabbits:
-            self.win()
-            return
-
-        head = self.snake.get_head()
-        head_node = self.grid.get_node(head)
-
-        next_rabbit = self.closest_rabbit()
-        rabbit_node = self.grid.get_node(next_rabbit.pos())
-
-        next_nodes = shortest_path(self.grid, start=head_node, end=rabbit_node)
-
-        if not next_nodes:
-            return
-
-        self.directions = [
-            choose_direction(n1=next_nodes[i], n2=next_nodes[i + 1])
-            for i in range(len(next_nodes) - 1)
-        ]
+        state = self.get_state()
+        action = self.training_handler.select_action(intial_state=state)
+        self.directions = [action]
 
     def check_eat(self):
         head = self.snake.get_head()
@@ -73,19 +71,30 @@ class GameEngine(QObject):
         self.snake.move()
         self.performance_tracker.increment_movements()
 
-    def closest_rabbit(self):
-        head = self.snake.get_head()
-        head_node = self.grid.get_node(head)
-
-        next_rabbit = min(self.rabbits,
-                          key=lambda p: (p.x - head_node.x)**2 +
-                          (p.y - head_node.y)**2)
-        return next_rabbit
-
     def win(self):
         self.performance_tracker.save_performance()
+        self.performance_tracker.reset()
         self.game_won.emit()
+        self.reset()
 
     def loose(self):
+
         self.performance_tracker.save_performance()
+        self.performance_tracker.reset()
         self.game_lost.emit()
+        self.reset()
+
+    def stop(self):
+        self.game_stop.emit()
+
+    def get_state(self):
+        return np.array([node.kind for row in self.grid.nodes for node in row],
+                        dtype=np.int8)
+
+    def reset(self):
+        self.snake.body = [(10, 10), (10, 11), (10, 12)]
+        self.rabbits.clear()
+        self.rabbits.extend(
+            create_rabbits(width=width(),
+                           height=height(),
+                           nb_lapins=nb_lapins()))
