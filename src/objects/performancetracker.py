@@ -33,9 +33,7 @@ class PerformanceTracker:
         }
 
     def save_performance(self, filename="performances.csv"):
-        fieldnames = [
-            "start_time", "duration", "lapins_manges", "movements", "score"
-        ]
+        fieldnames = ["start_time", "duration", "lapins_manges", "movements", "score"]
         performance_data = self.get_performance_data()
 
         # Vérifiez si le fichier existe

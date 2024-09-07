@@ -3,12 +3,14 @@ from src.utils.constants import empty_cell_grid_code
 
 class Node:
 
-    def __init__(self,
-                 x: int,
-                 y: int,
-                 walkable: bool = True,
-                 kind: int = empty_cell_grid_code(),
-                 **kwargs):
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        walkable: bool = True,
+        kind: int = empty_cell_grid_code(),
+        **kwargs
+    ):
         self.x = x
         self.y = y
         self.heuristic = 0

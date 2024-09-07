@@ -39,15 +39,14 @@ class Astar(PathfindingAlgorithm):
             if not open_list:
                 return None
 
-    def define_new_directions(self, grid: Grid, snake: Snake,
-                              rabbits: List[Rabbit]) -> List[Qt.Key]:
+    def define_new_directions(
+        self, grid: Grid, snake: Snake, rabbits: List[Rabbit]
+    ) -> List[Qt.Key]:
 
         head = snake.get_head()
         head_node = grid.get_node(head)
 
-        next_rabbit = self.closest_rabbit(snake=snake,
-                                          rabbits=rabbits,
-                                          grid=grid)
+        next_rabbit = self.closest_rabbit(snake=snake, rabbits=rabbits, grid=grid)
         rabbit_node = grid.get_node(next_rabbit.pos())
 
         next_nodes = self.shortest_path(grid, start=head_node, end=rabbit_node)
@@ -86,6 +85,6 @@ class Astar(PathfindingAlgorithm):
         pass
         next_rabbit = min(
             rabbits,
-            key=lambda p: (p.x - head_node.x)**2 + (p.y - head_node.y)**2,
+            key=lambda p: (p.x - head_node.x) ** 2 + (p.y - head_node.y) ** 2,
         )
         return next_rabbit
