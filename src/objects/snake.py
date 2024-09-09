@@ -7,10 +7,13 @@ class Snake:
     def __init__(
         self,
         direction=Qt.Key_Down,
-        body=[(10, 10), (11, 10), (12, 10)],
+        body=None,
     ):
         self.direction = direction
-        self.body = body
+        if body is None:
+            self.body = [(10, 10), (11, 10), (12, 10)]  # Default starting position
+        else:
+            self.body = body
 
     def change_direction(self, direction):
         if not (

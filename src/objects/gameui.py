@@ -1,6 +1,7 @@
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QHBoxLayout,
     QLabel,
@@ -25,7 +26,7 @@ class GameWindow(QWidget):
     def init_ui(self):
         self.layout = QHBoxLayout()
         self.menu = MenuUI()
-        self.menu.game_started.connect(self.start_game)
+        self.menu.game_start_signal.connect(self.start_game)
         self.layout.addWidget(self.menu)
 
         self.setLayout(self.layout)
@@ -46,7 +47,8 @@ class GameWindow(QWidget):
 
 
 class MenuUI(QWidget):
-    game_started = pyqtSignal()
+    game_start_signal = pyqtSignal()
+    game_stop_signal = pyqtSignal()
 
     def __init__(self):
         super(MenuUI, self).__init__()
@@ -54,8 +56,8 @@ class MenuUI(QWidget):
         layout = QVBoxLayout()
 
         algorithm_label = QLabel("Algorithm")
-        self.combo = QComboBox()
-        self.combo.addItems(["A-étoile"])
+        self.algorithm_combobox = QComboBox()
+        self.algorithm_combobox.addItems(["A-étoile", "Actor-Critic"])
 
         self.current_width, self.current_height = 20, 20
 
@@ -83,17 +85,36 @@ class MenuUI(QWidget):
 
         self.thresh = 80
         self.rabbits_spinbox.setMaximum(self.thresh)
-        start_button = QPushButton("Start Game")
+
+        self.infinite_loop = True
+        infinite_loop_label = QLabel("Infinite loop")
+        self.infinite_loop_checkbox = QCheckBox()
+        self.infinite_loop_checkbox.setCheckState(Qt.Checked)
+        self.infinite_loop_checkbox.stateChanged.connect(
+            self.infinite_loop_change_state
+        )
+
+        button_layout = QHBoxLayout()
+        start_button = QPushButton("Start")
+        stop_button = QPushButton("Stop")
+
         start_button.clicked.connect(self.start_game)
+        stop_button.clicked.connect(self.stop_game)
+
+        button_layout.addWidget(start_button)
+        button_layout.addWidget(stop_button)
 
         layout.addWidget(self.width_label)
         layout.addWidget(self.width_slider)
         layout.addWidget(self.height_label)
         layout.addWidget(self.height_slider)
         layout.addWidget(self.rabbits_spinbox)
+
         layout.addWidget(algorithm_label)
-        layout.addWidget(self.combo)
-        layout.addWidget(start_button)
+        layout.addWidget(self.algorithm_combobox)
+        layout.addWidget(infinite_loop_label)
+        layout.addWidget(self.infinite_loop_checkbox)
+        layout.addLayout(button_layout)
 
         self.setLayout(layout)
 
@@ -118,10 +139,16 @@ class MenuUI(QWidget):
 
     def start_game(self):
         # Emit the signal to trigger the game interface
-        self.game_started.emit()
+        self.game_start_signal.emit()
+
+    def stop_game(self):
+        self.game_stop_signal.emit()
 
     def update_n_rabbits(self):
         self.current_n_rabbits = self.rabbits_spinbox.value()
+
+    def infinite_loop_change_state(self):
+        self.infinite_loop = self.infinite_loop_checkbox.isChecked()
 
 
 class GameInterface(QWidget):

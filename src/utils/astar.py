@@ -1,4 +1,5 @@
 import heapq
+import random
 from typing import List
 
 from PyQt5.QtCore import Qt
@@ -52,6 +53,11 @@ class Astar(PathfindingAlgorithm):
         next_nodes = self.shortest_path(grid, start=head_node, end=rabbit_node)
 
         if not next_nodes:
+            print(
+                "Warning: No valid path found to the rabbit. Defaulting to random move."
+            )
+            return [random.choice([Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right])]
+
             return
 
         directions = [

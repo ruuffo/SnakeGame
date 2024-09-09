@@ -5,11 +5,16 @@ import os
 
 class PerformanceTracker:
 
-    def __init__(self):
+    def __init__(self, n_rabbits: int, width: int, height: int, algorithm: str):
         self.start_time = datetime.now()
         self.lapins_manges = 0
         self.movements = 0
+        self.initial_n_rabbits = n_rabbits
+        self.initial_width = width
+        self.initial_height = height
+        self.algorithm = algorithm
         self.score = 0
+        self.win = False
 
     def increment_lapins_manges(self):
         self.lapins_manges += 1
@@ -30,10 +35,26 @@ class PerformanceTracker:
             "lapins_manges": self.lapins_manges,
             "movements": self.movements,
             "score": self.score,
+            "win": self.win,
+            "grid width": self.initial_width,
+            "grid height": self.initial_height,
+            "initial rabbits number": self.initial_n_rabbits,
+            "algorithm": self.algorithm,
         }
 
     def save_performance(self, filename="performances.csv"):
-        fieldnames = ["start_time", "duration", "lapins_manges", "movements", "score"]
+        fieldnames = [
+            "start_time",
+            "duration",
+            "lapins_manges",
+            "movements",
+            "score",
+            "win",
+            "grid width",
+            "grid height",
+            "initial rabbits number",
+            "algorithm",
+        ]
         performance_data = self.get_performance_data()
 
         # Vérifiez si le fichier existe

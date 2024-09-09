@@ -15,3 +15,6 @@ class PathfindingAlgorithm(ABC):
         self, grid: Grid, snake: Snake, rabbits: List[Rabbit]
     ) -> List[Qt.Key]:
         pass
+
+    def __str__(self):
+        return self.__class__.__name__

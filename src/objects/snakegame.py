@@ -1,8 +1,7 @@
-import random
-import time
-
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QWidget
+from src.objects.actorcritic import ActorCritic
+from src.objects.actorcriticalgorithm import ActorCriticAlgorithm
 from src.objects.gameengine import GameEngine
 from src.objects.gameui import GameWindow
 from src.objects.grid import Grid
@@ -15,12 +14,13 @@ class SnakeGame(QWidget):
 
     def __init__(self) -> None:
         super().__init__()
-        self.snake = Snake()
+        self.snake = None
         self.rabbits = []
         self.grid = None
 
-        self.game_window = GameWindow(self.grid)
-        self.game_window.menu.game_started.connect(self.on_game_start)
+        self.game_window = GameWindow(None)
+        self.game_window.menu.game_start_signal.connect(self.on_game_start)
+        self.game_window.menu.game_stop_signal.connect(self.on_game_stop)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.timerEvent)
@@ -28,41 +28,56 @@ class SnakeGame(QWidget):
         self.game_window.show()
 
     def on_game_start(self):
+        self.on_game_stop()
         width, height, nb_rabbits = (
             self.game_window.menu.current_width,
             self.game_window.menu.current_height,
             self.game_window.menu.current_n_rabbits,
         )
+
+        self.snake = Snake()
         self.grid = Grid(width=width, height=height)
         self.game_window.game_interface.grid = self.grid
 
-        algorithm_text = self.game_window.menu.combo.currentText()
+        algorithm_text = self.game_window.menu.algorithm_combobox.currentText()
+        algorithm = None
         if algorithm_text == "A-étoile":
             algorithm = Astar()
+        elif algorithm_text == "Actor-Critic":
+            algorithm = ActorCriticAlgorithm(ActorCritic(4))
 
         self.rabbits.clear()
-        self.rabbits.extend(create_rabbits(width, height, nb_lapins=nb_rabbits))
+        self.rabbits.extend(create_rabbits(width, height,
+                                           nb_lapins=nb_rabbits))
 
-        self.engine = GameEngine(
-            snake=self.snake, rabbits=self.rabbits, grid=self.grid, algorithm=algorithm
-        )
+        self.engine = GameEngine(snake=self.snake,
+                                 rabbits=self.rabbits,
+                                 grid=self.grid,
+                                 algorithm=algorithm)
         self.engine.game_won.connect(self.on_game_won)
         self.engine.game_lost.connect(self.on_game_lost)
         self.engine.game_stop.connect(self.on_game_stop)
-
+        print("Game start")
         self.timer.start(100)
 
     def timerEvent(self):
-        self.engine.update()
-        self.game_window.update()
+        if self.engine:
+            self.engine.update()
+            self.game_window.update()
 
     def on_game_won(self):
         print("Vous avez gagné!")
+        self.restart_or_not()
 
     def on_game_lost(self):
         print("Vous avez perdu!")
+        self.restart_or_not()
 
     def on_game_stop(self):
         self.timer.stop()
-        time.sleep(3)
-        self.ui.close()
+
+    def restart_or_not(self):
+        self.on_game_stop()
+        if self.game_window.menu.infinite_loop:
+            self.engine.reset()
+            self.timer.start(100)
