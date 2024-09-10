@@ -13,7 +13,7 @@ class ActorCriticAlgorithm(PathfindingAlgorithm):
 
     def __init__(self, model: ActorCritic) -> None:
         self.model = model
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.1)
         self.ACTION_MAP = {
             0: Qt.Key_Up,
             1: Qt.Key_Down,
@@ -60,11 +60,12 @@ class ActorCriticAlgorithm(PathfindingAlgorithm):
             state.append(rabbit_.y)
         return np.array(state)
 
-    def train_step(self, state, action, reward, next_state, done):
+    def train_step(self, state_tensor, action, reward, next_state_tensor, done):
         with tf.GradientTape() as tape:
-            # Prédire les probabilités d'action et la valeur de l'état
-            action_probs, value = self.model(state)
-            _, next_value = self.model(next_state)
+
+
+            action_probs, value = self.model(state_tensor)
+            _, next_value = self.model(next_state_tensor)
 
             # Calculer l'avantage
             advantage = reward + (1 - done) * next_value - value
@@ -85,3 +86,4 @@ class ActorCriticAlgorithm(PathfindingAlgorithm):
         grads = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(
             zip(grads, self.model.trainable_variables))
+        return loss

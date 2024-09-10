@@ -1,6 +1,7 @@
 import random
 import numpy as np
 from typing import List
+import tensorflow as tf
 from PyQt5.QtCore import QObject, Qt, pyqtSignal
 from src.objects.pathfindingalgorithm import PathfindingAlgorithm
 from src.objects.grid import Grid
@@ -8,6 +9,8 @@ from src.objects.rabbit import Rabbit
 from src.objects.snake import Snake
 from src.objects.performancetracker import PerformanceTracker
 from src.utils.utils import create_rabbits
+import logging
+from src.utils.astar import Astar
 
 
 class GameEngine(QObject):
@@ -37,9 +40,13 @@ class GameEngine(QObject):
         )
         self.done = False
 
-    def reset(self):
+    def reset(self, random_grid_size: bool = False):
+        if random_grid_size:
+            self.grid.randomize_size()
         self.done = False
         self.snake.body = [(10, 10), (10, 11), (10, 12)]
+        self.n_rabbit = random.randint(
+            1, int(self.grid.width * self.grid.height * .3))
         self.rabbits.clear()
         self.rabbits.extend(
             create_rabbits(self.grid.width, self.grid.height, self.n_rabbit))
@@ -52,34 +59,23 @@ class GameEngine(QObject):
         )
 
     def update(self):
-        pass
         self.grid.update(snake=self.snake, rabbits=self.rabbits)
         if not self.directions:
             if not self.rabbits:
                 self.win()
             else:
-                if str(self.algorithm) == "ActorCriticAlgorithm":
-                    state = self.get_state()
+                # if str(self.algorithm) == "ActorCriticAlgorithm":
+                #     state = self.get_state()
                 self.directions = self.algorithm.define_new_directions(
                     rabbits=self.rabbits, snake=self.snake, grid=self.grid)
                 if not self.directions:
-                    print(
-                        "Warning: No valid directions returned by the algorithm. "
-                    )
+                    logging.warning(
+                        "No valid directions returned by the algorithm. ")
                     self.loose()
                     return
         self.move_snake()
-        reward = 1 if self.check_eat() else 0
-        reward = -1 if self.check_collision() else reward
-        if self.algorithm == "ActorCritic":
-            next_state = self.get_state()
-            return self.algorithm.train_step(
-                state=state,
-                action=self.snake.direction,
-                reward=reward,
-                next_state=next_state,
-                done=self.done,
-            )
+        self.check_eat()
+        self.check_collision()
 
     def check_collision(self):
         x_head, y_head = self.snake.get_head()
@@ -87,12 +83,13 @@ class GameEngine(QObject):
 
         if not (0 <= x_head < self.grid.width
                 and 0 <= y_head < self.grid.height):
-            print(f"Snake out of bounds: head position ({x_head}, {y_head})")
+            logging.info(
+                f"Snake out of bounds: head position ({x_head}, {y_head})")
             self.loose()
             return True
 
         elif head in self.snake.body[1:]:
-            print(f"Snake collision with itself at {head}")
+            logging.info(f"Snake collision with itself at {head}")
             self.loose()
             return True
         return False
@@ -110,7 +107,7 @@ class GameEngine(QObject):
                 self.performance_tracker.increment_lapins_manges()
                 self.rabbits.remove(rabbit_)
                 self.snake.grow()
-                print(f"Rabbit eaten at ({x_head}, {y_head})")
+                logging.info(f"Rabbit eaten at ({x_head}, {y_head})")
                 return True
         return False
 
@@ -119,7 +116,7 @@ class GameEngine(QObject):
             new_direction = self.directions.pop(0)
             self.snake.change_direction(new_direction)
         else:
-            print("No directions available, snake is not moving.")
+            logging.warning("No directions available, snake is not moving.")
         self.snake.move()
         self.performance_tracker.increment_movements()
 
@@ -137,15 +134,33 @@ class GameEngine(QObject):
     def stop(self):
         self.game_stop.emit()
 
-    def get_state(self):
-        state = [
-            self.grid.width, self.grid.height,
-            self.algorithm.REVERSE_ACTION_MAP[self.snake.direction]
-        ]
-        for bodypart in self.snake.body:
-            state.append(bodypart[0])
-            state.append(bodypart[1])
-        for rabbit_ in self.rabbits:
-            state.append(rabbit_.x)
-            state.append(rabbit_.y)
-        return np.array(state)
+    def get_state_tensor(self):
+        state = [node.kind for row in self.grid.nodes for node in row]
+        state_tensor = tf.convert_to_tensor(state)
+        state_tensor = tf.cast(state_tensor, tf.float32)
+        state_tensor = tf.reshape(state_tensor,
+                                  [1, self.grid.height, self.grid.width, 1])
+        return state_tensor
+
+    def step(self, action):
+        """This class is dedicated for the training of the ActorCritic model
+        """
+        astar = Astar()
+        direction = astar.go_to_rabbit(self.grid,
+                                       self.snake,
+                                       rabbit=self.rabbits[action])
+        done = False
+        self.grid.update(snake=self.snake, rabbits=self.rabbits)
+        if not self.directions:
+            if not self.rabbits:
+                done = True
+            else:
+                self.directions.extend(direction)
+        self.move_snake()
+        reward = 1 if self.check_eat() else 0
+        if self.check_collision():
+            reward = -1
+            done = True
+
+        next_state = self.get_state_tensor()
+        return next_state, reward, done

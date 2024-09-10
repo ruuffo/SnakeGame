@@ -1,7 +1,7 @@
 import csv
 from datetime import datetime
 import os
-
+import logging
 
 class PerformanceTracker:
 
@@ -70,7 +70,7 @@ class PerformanceTracker:
             # Écrire les données de performance
             writer.writerow(performance_data)
 
-        print("Performance enregistrée dans le fichier CSV.")
+        logging.info("Performance enregistrée dans le fichier CSV.")
 
     def reset(self):
         self.__init__()

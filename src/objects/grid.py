@@ -1,3 +1,4 @@
+import random
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QBrush, QColor
 
@@ -13,7 +14,8 @@ class Grid:
     def __init__(self, width: int, height: int):
         self.height = height
         self.width = width
-        self.nodes = [[Node(x, y) for y in range(height)] for x in range(width)]
+        self.nodes = [[Node(x, y) for y in range(height)]
+                      for x in range(width)]
 
     def get_node(self, *args) -> Node:
         if len(args) == 2:
@@ -28,14 +30,12 @@ class Grid:
     def get_neighbors(self, node):
         x, y = node.x, node.y
         return [
-            x
-            for x in [
+            x for x in [
                 self.get_node(x - 1, y),
                 self.get_node(x + 1, y),
                 self.get_node(x, y + 1),
                 self.get_node(x, y - 1),
-            ]
-            if x is not None
+            ] if x is not None
         ]
 
     def draw(self, painter):
@@ -64,3 +64,9 @@ class Grid:
                 self.nodes[x][y].walkable = False
         for rabbit in rabbits:
             self.nodes[rabbit.x][rabbit.y].kind = Rabbit.GRID_CODE
+
+    def randomize_size(self):
+        self.width = random.randint(20, 150)
+        self.height = random.randint(20, 100)
+        self.nodes = [[Node(x, y) for y in range(self.height)]
+                           for x in range(self.width)]
