@@ -77,6 +77,7 @@ class MenuUI(QWidget):
         self.height_slider.blockSignals(False)
         self.height_slider.valueChanged.connect(self.update_slider_height)
 
+
         self.current_n_rabbits = 1
         self.rabbits_label = QLabel(f"number of rabbits: {self.current_n_rabbits}")
         self.rabbits_spinbox = QSpinBox()
@@ -93,6 +94,13 @@ class MenuUI(QWidget):
         self.infinite_loop_checkbox.stateChanged.connect(
             self.infinite_loop_change_state
         )
+
+        self.one_rabbit_mode = False
+        self.one_rabbit_mode_label = QLabel("One Rabbit Mode")
+        self.one_rabbit_mode_checkbox = QCheckBox()
+        self.one_rabbit_mode_checkbox.setCheckState(Qt.Unchecked)
+        self.one_rabbit_mode_checkbox.stateChanged.connect(self.one_rabbit_mode_checkbox_change_state)
+
 
         button_layout = QHBoxLayout()
         start_button = QPushButton("Start")
@@ -114,6 +122,8 @@ class MenuUI(QWidget):
         layout.addWidget(self.algorithm_combobox)
         layout.addWidget(infinite_loop_label)
         layout.addWidget(self.infinite_loop_checkbox)
+        layout.addWidget(self.one_rabbit_mode_label)
+        layout.addWidget(self.one_rabbit_mode_checkbox)
         layout.addLayout(button_layout)
 
         self.setLayout(layout)
@@ -149,6 +159,14 @@ class MenuUI(QWidget):
 
     def infinite_loop_change_state(self):
         self.infinite_loop = self.infinite_loop_checkbox.isChecked()
+    def one_rabbit_mode_checkbox_change_state(self):
+        self.one_rabbit_mode = self.one_rabbit_mode_checkbox.isChecked()
+        if self.one_rabbit_mode:
+            self.rabbits_spinbox.setValue(1)
+            self.rabbits_spinbox.setEnabled(False)
+        else:
+            self.rabbits_spinbox.setEnabled(True)
+
 
 
 class GameInterface(QWidget):

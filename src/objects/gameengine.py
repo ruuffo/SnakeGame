@@ -1,8 +1,7 @@
 import random
-import numpy as np
-from typing import List
+from typing import List, Union
 import tensorflow as tf
-from PyQt5.QtCore import QObject, Qt, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal, Qt
 from src.objects.pathfindingalgorithm import PathfindingAlgorithm
 from src.objects.grid import Grid
 from src.objects.rabbit import Rabbit
@@ -10,46 +9,66 @@ from src.objects.snake import Snake
 from src.objects.performancetracker import PerformanceTracker
 from src.utils.utils import create_rabbits
 import logging
-from src.utils.astar import Astar
+import numpy as np
 
 
 class GameEngine(QObject):
     game_won = pyqtSignal()
     game_lost = pyqtSignal()
     game_stop = pyqtSignal()
+    ACTION_MAP = {
+        0: Qt.Key_Up,
+        1: Qt.Key_Down,
+        2: Qt.Key_Left,
+        3: Qt.Key_Right,
+    }
+    REVERSE_ACTION_MAP = {v: k for k, v in ACTION_MAP.items()}
 
     def __init__(
         self,
         snake: Snake,
-        rabbits: List[Rabbit],
+        rabbits: Union[List[Rabbit], Rabbit],
         grid: Grid,
         algorithm: PathfindingAlgorithm,
+        one_rabbit_mode: bool = False,
     ):
         super().__init__()
+        if len(rabbits) != 1 and one_rabbit_mode:
+            raise ValueError(
+                "If one_rabbit_mode is set to True, the length of rabbits list must be equal to 1"
+            )
+
         self.snake = snake
         self.rabbits = rabbits
         self.n_rabbit = len(rabbits)
         self.grid = grid
         self.directions = []
         self.algorithm = algorithm
+        self.one_rabbit_mode = one_rabbit_mode
         self.performance_tracker = PerformanceTracker(
             n_rabbits=self.n_rabbit,
             width=self.grid.width,
             height=self.grid.height,
             algorithm=str(algorithm),
         )
-        self.done = False
+        self.initial_snake_position = snake.body
 
-    def reset(self, random_grid_size: bool = False):
+    def reset(self,
+              random_grid_size: bool = False,
+              random_n_rabbits: bool = False):
         if random_grid_size:
             self.grid.randomize_size()
-        self.done = False
-        self.snake.body = [(10, 10), (10, 11), (10, 12)]
-        self.n_rabbit = random.randint(
-            1, int(self.grid.width * self.grid.height * .3))
+        self.snake.body = self.initial_snake_position.copy()
+        if random_n_rabbits:
+            self.n_rabbit = random.randint(
+                1, int(self.grid.width * self.grid.height * .3))
+
         self.rabbits.clear()
         self.rabbits.extend(
-            create_rabbits(self.grid.width, self.grid.height, self.n_rabbit))
+            create_rabbits(width=self.grid.width,
+                           height=self.grid.height,
+                           n_rabbits=self.n_rabbit,
+                           snake=self.snake))
         self.directions.clear()
         self.performance_tracker = PerformanceTracker(
             n_rabbits=self.n_rabbit,
@@ -61,11 +80,9 @@ class GameEngine(QObject):
     def update(self):
         self.grid.update(snake=self.snake, rabbits=self.rabbits)
         if not self.directions:
-            if not self.rabbits:
+            if not self.rabbits and not self.one_rabbit_mode:
                 self.win()
             else:
-                # if str(self.algorithm) == "ActorCriticAlgorithm":
-                #     state = self.get_state()
                 self.directions = self.algorithm.define_new_directions(
                     rabbits=self.rabbits, snake=self.snake, grid=self.grid)
                 if not self.directions:
@@ -94,11 +111,6 @@ class GameEngine(QObject):
             return True
         return False
 
-    # def define_new_directions(self):
-    #     state = self.get_state()
-    #     action = self.training_handler.select_action(intial_state=state)
-    #     self.directions = [action]
-
     def check_eat(self):
         head = self.snake.get_head()
         x_head, y_head = head[0], head[1]
@@ -107,6 +119,11 @@ class GameEngine(QObject):
                 self.performance_tracker.increment_lapins_manges()
                 self.rabbits.remove(rabbit_)
                 self.snake.grow()
+                if self.one_rabbit_mode:
+                    self.rabbits = create_rabbits(width=self.grid.width,
+                                                  height=self.grid.height,
+                                                  n_rabbits=self.n_rabbit,
+                                                  snake=self.snake)
                 logging.info(f"Rabbit eaten at ({x_head}, {y_head})")
                 return True
         return False
@@ -121,13 +138,11 @@ class GameEngine(QObject):
         self.performance_tracker.increment_movements()
 
     def win(self):
-        self.done = True
         self.performance_tracker.win = True
         self.performance_tracker.save_performance()
         self.game_won.emit()
 
     def loose(self):
-        self.done = True
         self.performance_tracker.save_performance()
         self.game_lost.emit()
 
@@ -137,7 +152,7 @@ class GameEngine(QObject):
     def get_state_tensor(self):
         state = [node.kind for row in self.grid.nodes for node in row]
         state_tensor = tf.convert_to_tensor(state)
-        state_tensor = tf.cast(state_tensor, tf.float32)
+        state_tensor = tf.cast(state_tensor, tf.int32)
         state_tensor = tf.reshape(state_tensor,
                                   [1, self.grid.height, self.grid.width, 1])
         return state_tensor
@@ -145,22 +160,29 @@ class GameEngine(QObject):
     def step(self, action):
         """This class is dedicated for the training of the ActorCritic model
         """
-        astar = Astar()
-        direction = astar.go_to_rabbit(self.grid,
-                                       self.snake,
-                                       rabbit=self.rabbits[action])
+        direction = self.ACTION_MAP[action]
         done = False
         self.grid.update(snake=self.snake, rabbits=self.rabbits)
+
         if not self.directions:
-            if not self.rabbits:
+
+            if not self.rabbits and not self.one_rabbit_mode:
                 done = True
             else:
-                self.directions.extend(direction)
+                self.directions.append(direction)
+
         self.move_snake()
+
         reward = 1 if self.check_eat() else 0
+
         if self.check_collision():
             reward = -1
             done = True
 
         next_state = self.get_state_tensor()
-        return next_state, reward, done
+        return (next_state.astype(np.int32), np.array(reward, np.int32),
+                done.astype(np.bool))
+
+    def tf_step(self, action: tf.Tensor) -> List[tf.Tensor]:
+        return tf.numpy_function(self.step, [action],
+                                 [tf.int32, tf.int32, tf.bool])

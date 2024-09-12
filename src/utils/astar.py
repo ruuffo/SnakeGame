@@ -1,6 +1,7 @@
 import heapq
+import logging
 import random
-from typing import List
+from typing import Iterable, List
 
 from PyQt5.QtCore import Qt
 from src.objects.pathfindingalgorithm import PathfindingAlgorithm
@@ -54,8 +55,8 @@ class Astar(PathfindingAlgorithm):
         next_nodes = self.shortest_path(grid, start=head_node, end=rabbit_node)
 
         if not next_nodes:
-            print(
-                "Warning: No valid path found to the rabbit. Defaulting to random move."
+            logging.warning(
+                "No valid path found to the rabbit. Defaulting to random move."
             )
             return [
                 random.choice(
@@ -63,7 +64,7 @@ class Astar(PathfindingAlgorithm):
             ]
 
         directions = [
-            choose_direction(n1=next_nodes[i], n2=next_nodes[i + 1])
+            choose_direction(start_node=next_nodes[i], end_node=next_nodes[i + 1])
             for i in range(len(next_nodes) - 1)
         ]
         return directions
@@ -90,9 +91,10 @@ class Astar(PathfindingAlgorithm):
     def closest_rabbit(self, snake: Snake, grid: Grid, rabbits: List[Rabbit]):
         head = snake.get_head()
         head_node = grid.get_node(head)
-        pass
+
         next_rabbit = min(
             rabbits,
             key=lambda p: (p.x - head_node.x)**2 + (p.y - head_node.y)**2,
         )
+
         return next_rabbit

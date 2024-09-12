@@ -11,17 +11,17 @@ class Snake:
     ):
         self.direction = direction
         if body is None:
-            self.body = [(10, 10), (11, 10), (12, 10)]  # Default starting position
+            self.body = [(10, 10), (11, 10),
+                         (12, 10)]  # Default starting position
         else:
             self.body = body
 
     def change_direction(self, direction):
-        if not (
-            (self.direction == Qt.Key_Down and direction == Qt.Key_Up)
-            or (self.direction == Qt.Key_Up and direction == Qt.Key_Down)
-            or (self.direction == Qt.Key_Left and direction == Qt.Key_Right)
-            or (self.direction == Qt.Key_Right and direction == Qt.Key_Left)
-        ):
+        if not ((self.direction == Qt.Key_Down and direction == Qt.Key_Up) or
+                (self.direction == Qt.Key_Up and direction == Qt.Key_Down) or
+                (self.direction == Qt.Key_Left and direction == Qt.Key_Right)
+                or
+                (self.direction == Qt.Key_Right and direction == Qt.Key_Left)):
             self.direction = direction
 
     def move(self):

@@ -3,9 +3,11 @@ from datetime import datetime
 import os
 import logging
 
+
 class PerformanceTracker:
 
-    def __init__(self, n_rabbits: int, width: int, height: int, algorithm: str):
+    def __init__(self, n_rabbits: int, width: int, height: int,
+                 algorithm: str):
         self.start_time = datetime.now()
         self.lapins_manges = 0
         self.movements = 0

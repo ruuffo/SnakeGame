@@ -29,11 +29,11 @@ class SnakeGame(QWidget):
 
     def on_game_start(self):
         self.on_game_stop()
-        width, height, nb_rabbits = (
+        width, height, nb_rabbits, one_rabbit_mode = (
             self.game_window.menu.current_width,
             self.game_window.menu.current_height,
             self.game_window.menu.current_n_rabbits,
-        )
+            self.game_window.menu.one_rabbit_mode)
 
         self.snake = Snake()
         self.grid = Grid(width=width, height=height)
@@ -47,13 +47,17 @@ class SnakeGame(QWidget):
             algorithm = ActorCriticAlgorithm(ActorCritic(4))
 
         self.rabbits.clear()
-        self.rabbits.extend(create_rabbits(width, height,
-                                           nb_lapins=nb_rabbits))
+        self.rabbits.extend(
+            create_rabbits(width=width,
+                           height=height,
+                           n_rabbits=nb_rabbits,
+                           snake=self.snake))
 
         self.engine = GameEngine(snake=self.snake,
                                  rabbits=self.rabbits,
                                  grid=self.grid,
-                                 algorithm=algorithm)
+                                 algorithm=algorithm,
+                                 one_rabbit_mode=one_rabbit_mode)
         self.engine.game_won.connect(self.on_game_won)
         self.engine.game_lost.connect(self.on_game_lost)
         self.engine.game_stop.connect(self.on_game_stop)
