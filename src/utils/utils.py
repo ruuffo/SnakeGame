@@ -2,7 +2,7 @@ import random
 from typing import List
 from PyQt5.QtCore import Qt
 
-from objects.node import Node
+from src.objects.node import Node
 from src.objects.snake import Snake
 from src.objects.rabbit import Rabbit
 
