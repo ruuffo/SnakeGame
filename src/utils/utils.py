@@ -1,13 +1,13 @@
+from __future__ import annotations
 import random
 from typing import List
 from PyQt5.QtCore import Qt
 
 from src.objects.node import Node
-from src.objects.snake import Snake
 from src.objects.rabbit import Rabbit
 
 
-def choose_direction(start_node: Node, end_node: Node) -> Qt.Key:
+def convert_direction_to_qt_keymap(start_node: Node, end_node: Node) -> Qt.Key:
     if end_node.x - start_node.x > 0:
         return Qt.Key_Right
     elif end_node.x - start_node.x < 0:
@@ -19,7 +19,7 @@ def choose_direction(start_node: Node, end_node: Node) -> Qt.Key:
 
 
 def create_rabbits(width: int, height: int, n_rabbits: int,
-                   snake: Snake) -> List[Rabbit]:
+                   snake: "Snake") -> List[Rabbit]:
     rabbits_set = set()
 
     while len(rabbits_set) < n_rabbits:

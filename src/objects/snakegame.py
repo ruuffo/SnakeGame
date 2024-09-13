@@ -6,7 +6,7 @@ from src.objects.gameengine import GameEngine
 from src.objects.gameui import GameWindow
 from src.objects.grid import Grid
 from src.objects.snake import Snake
-from src.utils.astar import Astar
+from src.objects.astar import Astar
 from src.utils.utils import create_rabbits
 
 
@@ -33,7 +33,8 @@ class SnakeGame(QWidget):
             self.game_window.menu.current_width,
             self.game_window.menu.current_height,
             self.game_window.menu.current_n_rabbits,
-            self.game_window.menu.one_rabbit_mode)
+            self.game_window.menu.one_rabbit_mode,
+        )
 
         self.snake = Snake()
         self.grid = Grid(width=width, height=height)
@@ -53,11 +54,13 @@ class SnakeGame(QWidget):
                            n_rabbits=nb_rabbits,
                            snake=self.snake))
 
-        self.engine = GameEngine(snake=self.snake,
-                                 rabbits=self.rabbits,
-                                 grid=self.grid,
-                                 algorithm=algorithm,
-                                 one_rabbit_mode=one_rabbit_mode)
+        self.engine = GameEngine(
+            snake=self.snake,
+            rabbits=self.rabbits,
+            grid=self.grid,
+            algorithm=algorithm,
+            one_rabbit_mode=one_rabbit_mode,
+        )
         self.engine.game_won.connect(self.on_game_won)
         self.engine.game_lost.connect(self.on_game_lost)
         self.engine.game_stop.connect(self.on_game_stop)

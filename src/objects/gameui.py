@@ -36,10 +36,13 @@ class GameWindow(QWidget):
         # Remove the menu from the layout (optional, if you want the game to replace the menu)
         if self.game_interface is not None:
             self.layout.removeWidget(self.game_interface)
-            self.game_interface.deleteLater()  # Remove the previous game interface if it exists
+            self.game_interface.deleteLater(
+            )  # Remove the previous game interface if it exists
         width, height = self.menu.current_width * 10, self.menu.current_height * 10
         # Create the game interface and add it to the layout
-        self.game_interface = GameInterface(self.grid, width=width, height=height)
+        self.game_interface = GameInterface(self.grid,
+                                            width=width,
+                                            height=height)
         self.layout.addWidget(self.game_interface)
 
         # Refresh the layout to show the game interface
@@ -77,9 +80,9 @@ class MenuUI(QWidget):
         self.height_slider.blockSignals(False)
         self.height_slider.valueChanged.connect(self.update_slider_height)
 
-
         self.current_n_rabbits = 1
-        self.rabbits_label = QLabel(f"number of rabbits: {self.current_n_rabbits}")
+        self.rabbits_label = QLabel(
+            f"number of rabbits: {self.current_n_rabbits}")
         self.rabbits_spinbox = QSpinBox()
         self.rabbits_spinbox.valueChanged.connect(self.update_n_rabbits)
         self.rabbits_spinbox.setMinimum(1)
@@ -92,15 +95,14 @@ class MenuUI(QWidget):
         self.infinite_loop_checkbox = QCheckBox()
         self.infinite_loop_checkbox.setCheckState(Qt.Checked)
         self.infinite_loop_checkbox.stateChanged.connect(
-            self.infinite_loop_change_state
-        )
+            self.infinite_loop_change_state)
 
         self.one_rabbit_mode = False
         self.one_rabbit_mode_label = QLabel("One Rabbit Mode")
         self.one_rabbit_mode_checkbox = QCheckBox()
         self.one_rabbit_mode_checkbox.setCheckState(Qt.Unchecked)
-        self.one_rabbit_mode_checkbox.stateChanged.connect(self.one_rabbit_mode_checkbox_change_state)
-
+        self.one_rabbit_mode_checkbox.stateChanged.connect(
+            self.one_rabbit_mode_checkbox_change_state)
 
         button_layout = QHBoxLayout()
         start_button = QPushButton("Start")
@@ -128,17 +130,13 @@ class MenuUI(QWidget):
 
         self.setLayout(layout)
 
-    def update_slider_width(
-        self,
-    ):
+    def update_slider_width(self, ):
         self.current_width = self.width_slider.value()
         self.thresh = self.compute_thresh()
         self.rabbits_spinbox.setMaximum(self.thresh)
         self.width_label.setText(f"Width: {self.current_width}")
 
-    def update_slider_height(
-        self,
-    ):
+    def update_slider_height(self, ):
         self.current_height = self.height_slider.value()
         self.thresh = self.compute_thresh()
         self.rabbits_spinbox.setMaximum(self.thresh)
@@ -159,6 +157,7 @@ class MenuUI(QWidget):
 
     def infinite_loop_change_state(self):
         self.infinite_loop = self.infinite_loop_checkbox.isChecked()
+
     def one_rabbit_mode_checkbox_change_state(self):
         self.one_rabbit_mode = self.one_rabbit_mode_checkbox.isChecked()
         if self.one_rabbit_mode:
@@ -166,7 +165,6 @@ class MenuUI(QWidget):
             self.rabbits_spinbox.setEnabled(False)
         else:
             self.rabbits_spinbox.setEnabled(True)
-
 
 
 class GameInterface(QWidget):

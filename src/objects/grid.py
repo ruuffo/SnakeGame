@@ -1,5 +1,4 @@
 import random
-from typing import Iterable
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QBrush, QColor
 
@@ -43,7 +42,7 @@ class Grid:
         for x in range(self.width):
             for y in range(self.height):
                 painter.setPen(QColor(0, 0, 0, 0))
-                painter.setBrush(QBrush(Qt.white))
+                painter.setBrush(QBrush(Qt.black))
                 node = self.nodes[x][y]
                 if node.kind == Snake.GRID_CODE:
                     painter.setBrush(QBrush(Qt.green))

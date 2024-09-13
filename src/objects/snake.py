@@ -1,4 +1,7 @@
+from __future__ import annotations
 from PyQt5.QtCore import Qt
+
+from src.utils.utils import convert_direction_to_qt_keymap
 
 
 class Snake:
@@ -24,10 +27,24 @@ class Snake:
                 (self.direction == Qt.Key_Right and direction == Qt.Key_Left)):
             self.direction = direction
 
+    def possible_moves(self, grid: "Grid"):
+        head = self.get_head()
+        head_node = grid.get_node(head)
+        neighbors = [
+            neighbor for neighbor in grid.get_neighbors(head_node)
+            if neighbor.walkable
+        ]
+        possible_moves = [
+            convert_direction_to_qt_keymap(head_node, neighbor)
+            for neighbor in neighbors
+        ]
+        return possible_moves
+
     def move(self):
 
         head = self.body[0]
         x, y = head[0], head[1]
+
         if self.direction == Qt.Key_Left:
             x -= 1
         elif self.direction == Qt.Key_Right:

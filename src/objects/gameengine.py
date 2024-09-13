@@ -1,5 +1,5 @@
 import random
-from typing import List, Union
+from typing import List
 import tensorflow as tf
 from PyQt5.QtCore import QObject, pyqtSignal, Qt
 from src.objects.pathfindingalgorithm import PathfindingAlgorithm
@@ -27,7 +27,7 @@ class GameEngine(QObject):
     def __init__(
         self,
         snake: Snake,
-        rabbits: Union[List[Rabbit], Rabbit],
+        rabbits: List[Rabbit],
         grid: Grid,
         algorithm: PathfindingAlgorithm,
         one_rabbit_mode: bool = False,
@@ -61,14 +61,16 @@ class GameEngine(QObject):
         self.snake.body = self.initial_snake_position.copy()
         if random_n_rabbits:
             self.n_rabbit = random.randint(
-                1, int(self.grid.width * self.grid.height * .3))
+                1, int(self.grid.width * self.grid.height * 0.3))
 
         self.rabbits.clear()
         self.rabbits.extend(
-            create_rabbits(width=self.grid.width,
-                           height=self.grid.height,
-                           n_rabbits=self.n_rabbit,
-                           snake=self.snake))
+            create_rabbits(
+                width=self.grid.width,
+                height=self.grid.height,
+                n_rabbits=self.n_rabbit,
+                snake=self.snake,
+            ))
         self.directions.clear()
         self.performance_tracker = PerformanceTracker(
             n_rabbits=self.n_rabbit,
@@ -79,17 +81,14 @@ class GameEngine(QObject):
 
     def update(self):
         self.grid.update(snake=self.snake, rabbits=self.rabbits)
+
+        if not self.rabbits and not self.one_rabbit_mode:
+            self.win()
+
         if not self.directions:
-            if not self.rabbits and not self.one_rabbit_mode:
-                self.win()
-            else:
-                self.directions = self.algorithm.define_new_directions(
-                    rabbits=self.rabbits, snake=self.snake, grid=self.grid)
-                if not self.directions:
-                    logging.warning(
-                        "No valid directions returned by the algorithm. ")
-                    self.loose()
-                    return
+            self.directions = self.algorithm.define_new_directions(
+                rabbits=self.rabbits, snake=self.snake, grid=self.grid)
+
         self.move_snake()
         self.check_eat()
         self.check_collision()
@@ -120,10 +119,12 @@ class GameEngine(QObject):
                 self.rabbits.remove(rabbit_)
                 self.snake.grow()
                 if self.one_rabbit_mode:
-                    self.rabbits = create_rabbits(width=self.grid.width,
-                                                  height=self.grid.height,
-                                                  n_rabbits=self.n_rabbit,
-                                                  snake=self.snake)
+                    self.rabbits = create_rabbits(
+                        width=self.grid.width,
+                        height=self.grid.height,
+                        n_rabbits=self.n_rabbit,
+                        snake=self.snake,
+                    )
                 logging.info(f"Rabbit eaten at ({x_head}, {y_head})")
                 return True
         return False
@@ -158,18 +159,16 @@ class GameEngine(QObject):
         return state_tensor
 
     def step(self, action):
-        """This class is dedicated for the training of the ActorCritic model
-        """
+        """This class is dedicated for the training of the ActorCritic model"""
         direction = self.ACTION_MAP[action]
         done = False
         self.grid.update(snake=self.snake, rabbits=self.rabbits)
 
-        if not self.directions:
+        if not self.rabbits and not self.one_rabbit_mode:
+            done = True
 
-            if not self.rabbits and not self.one_rabbit_mode:
-                done = True
-            else:
-                self.directions.append(direction)
+        if not self.directions:
+            self.directions.append(direction)
 
         self.move_snake()
 
@@ -180,8 +179,11 @@ class GameEngine(QObject):
             done = True
 
         next_state = self.get_state_tensor()
-        return (next_state.astype(np.int32), np.array(reward, np.int32),
-                done.astype(np.bool))
+        return (
+            next_state.astype(np.int32),
+            np.array(reward, np.int32),
+            done.astype(np.bool),
+        )
 
     def tf_step(self, action: tf.Tensor) -> List[tf.Tensor]:
         return tf.numpy_function(self.step, [action],

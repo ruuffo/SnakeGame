@@ -1,4 +1,3 @@
-from logging import critical
 from typing import List
 from PyQt5.QtCore import Qt
 import tensorflow as tf
